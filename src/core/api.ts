@@ -3,6 +3,6 @@ import { config } from "./config";
 
 export const api = axios.create({
   headers: {
-    'x-api-key': config.apiKey
-  }
-})
+    "x-api-key": config.apiKey,
+  },
+});

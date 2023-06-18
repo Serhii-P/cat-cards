@@ -1,39 +1,91 @@
 import { Modal } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "./Button";
-
-// type Props = {}
+import { useSearchParams } from "react-router-dom";
+import { useSingleCatData } from "../api/useSingleCatData";
+import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
+import { HeartIcon as HeartIconOutline } from "@heroicons/react/24/outline";
+import { filterSearchParams } from "../utils/searchParams";
+import { useLikeApi } from "../api/useLikeHook";
 
 const CatModal = () => {
-  const [show, setShow] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isOpened, setIsOpened] = useState(false);
+  const cat = searchParams.get("cat");
+  const { data, isLoading } = useSingleCatData({ id: cat });
+  const {
+    like,
+    dislike,
+    isLiked,
+    isLoading: isLikeLoading,
+  } = useLikeApi({ catId: cat });
 
+  useEffect(() => {
+    setIsOpened(!!cat);
+  }, [cat]);
+
+  const closeModal = () => {
+    const paramsObject = filterSearchParams(searchParams, "cat");
+
+    setSearchParams(paramsObject);
+  };
+
+  const handleLikeButton = () => {
+    if (isLiked) {
+      dislike();
+    } else {
+      like();
+    }
+  };
+
+  const handleLearnMore = (breedId: string) => {
+    setSearchParams({
+      breed: breedId,
+    });
+  };
   return (
     <>
-      <Button onClick={() => setShow((a) => !a)}>Toggle modal</Button>
-      <Modal show={show} onClose={() => setShow(false)}>
-        <Modal.Header>Terms of Service</Modal.Header>
+      <Modal show={isOpened} onClose={closeModal}>
+        <Modal.Header>
+          {isLoading
+            ? "Loading..."
+            : data?.breeds?.map((b) => b.name).join(",") || "Cute kitty"}
+        </Modal.Header>
         <Modal.Body>
-          <div className="space-y-6">
-            <p className="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-              With less than a month to go before the European Union enacts new
-              consumer privacy laws for its citizens, companies around the world
-              are updating their terms of service agreements to comply.
-            </p>
-            <p className="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-              The European Union’s General Data Protection Regulation (G.D.P.R.)
-              goes into effect on May 25 and is meant to ensure a common set of
-              data rights in the European Union. It requires organizations to
-              notify users as soon as possible of high-risk data breaches that
-              could personally affect them.
-            </p>
+          <div className="flex flex-col gap-6">
+            {data?.url && (
+              <div className="relative">
+                <div className="absolute top-4 right-4">
+                  <Button
+                    size="sm"
+                    onClick={handleLikeButton}
+                    isLoading={isLikeLoading}
+                  >
+                    {isLiked ? (
+                      <HeartIconSolid className="h-4 w-4 text-white" />
+                    ) : (
+                      <HeartIconOutline className="h-4 w-4 text-white" />
+                    )}
+                  </Button>
+                </div>
+                <img src={data?.url} />
+              </div>
+            )}
+
+            {data?.breeds && (
+              <>
+                <p>{data.breeds[0].description}</p>
+                <Button
+                  onClick={() =>
+                    handleLearnMore(data.breeds ? data.breeds[0].id : "")
+                  }
+                >
+                  Learn more
+                </Button>
+              </>
+            )}
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={() => setShow(false)}>I accept</Button>
-          <Button color="gray" onClick={() => setShow(false)}>
-            Decline
-          </Button>
-        </Modal.Footer>
       </Modal>
     </>
   );

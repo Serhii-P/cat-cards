@@ -4,7 +4,7 @@ import { Button as ButtonFlowbite, Spinner } from "flowbite-react";
 interface ButtonProps {
   onClick?: ComponentProps<"button">["onClick"];
   color?: ComponentProps<typeof ButtonFlowbite>["color"];
-  // size?: ComponentProps<typeof ButtonFlowbite>['size'];
+  size?: ComponentProps<typeof ButtonFlowbite>["size"];
   isLoading?: boolean;
 }
 
@@ -13,13 +13,14 @@ const Button: FC<PropsWithChildren<ButtonProps>> = ({
   onClick,
   isLoading,
   color,
+  size,
 }) => {
   return (
     <ButtonFlowbite
       onClick={onClick}
       disabled={isLoading}
       color={color}
-      // size={size}
+      size={size}
     >
       {isLoading ? (
         <>

@@ -1,28 +1,46 @@
-import { useInfiniteQuery, useQuery } from "react-query";
+import { useInfiniteQuery } from "react-query";
 import { api } from "../core/api";
 import { getRandomCatsDto } from "./dto/GetRandomCats";
 
-const getRandomCats = async ({ pageParam = 0 }) => {
+interface GetRandomCatsParams {
+  pageParam: number;
+  breedId?: string | null;
+}
+
+const getRandomCats = async ({ pageParam, breedId }: GetRandomCatsParams) => {
   const { data } = await api.get<getRandomCatsDto>(
     "https://api.thecatapi.com/v1/images/search",
     {
       params: {
         limit: 10,
         pageParam,
+        breed_ids: breedId,
       },
     }
   );
+
   return data;
 };
 
-export const useRandomCatData = () => {
-  const { isLoading, isError, data, fetchNextPage, isFetchingNextPage } = useInfiniteQuery(
-    "randomCats",
-    getRandomCats,
-    {
-      getNextPageParam: () => Date.now(),
-    }
-  );
+interface UseRandomCatDataParams {
+  breedId?: string | null;
+}
 
-  return { isLoading, isError, data, fetchNextPage, isFetchingNextPage };
+export const useRandomCatData = ({ breedId }: UseRandomCatDataParams = {}) => {
+  const { data, isLoading, isError, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery(
+      `getRandomCats-${breedId || "random"}`,
+      ({ pageParam }) => getRandomCats({ pageParam, breedId }),
+      {
+        getNextPageParam: () => Date.now(),
+      }
+    );
+
+  return {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    isFetchingNextPage,
+  };
 };
